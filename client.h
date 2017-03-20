@@ -27,6 +27,10 @@ typedef struct{
 }Server;
 
 void connectToServer(Server* server,char* serverAddress);
+Server*  initConnection(Server * server, char* serverAddress);
+void sendMessage(Server* server, char* msg, int encodedSize);
+void initXdr(char* sent, char* received);
+int decodeMessage(char* serverMsg);
 
 
 #endif

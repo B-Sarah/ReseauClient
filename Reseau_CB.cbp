@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Reseau_CB" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Reseau_CB" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Reseau_CB" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="Client/character.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Client/character.h" />
+		<Unit filename="Client/client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Client/client.h" />
+		<Unit filename="Client/game.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Client/game.h" />
+		<Unit filename="Client/map.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Client/map.h" />
+		<Unit filename="Client/object.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Client/object.h" />
+		<Unit filename="Client/player.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Client/player.h" />
+		<Unit filename="Client/tile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Client/tile.h" />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<lib_finder disable_auto="1" />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

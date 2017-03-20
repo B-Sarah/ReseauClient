@@ -14,6 +14,7 @@
 #include <rpc/xdr.h>
 
 #include "game.h"
+#include "configClient.h"
 
 #define PORT 3000
 #define MAX_MSG_SIZE 1024
@@ -26,7 +27,6 @@ typedef struct{
 }Server;
 
 void connectToServer(Server* server,char* serverAddress);
-bool_t xdr_player(XDR* pt_xdr, Player* player);
 
 
 #endif

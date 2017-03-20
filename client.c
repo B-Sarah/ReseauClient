@@ -5,10 +5,6 @@ void connectToServer(Server* server,char* serverAddress){
 	XDR xdr_encode, xdr_decode;
 	char sent[MAX_MSG_SIZE] = {'\0'};
 	char received[MAX_MSG_SIZE] = {'\0'};
-	Player player;
-
-	strcpy(player.name, "Dorwed");
-	strcpy(player.password, "ifucanreadthis");
 
 	/*creation des flots */
 	xdrmem_create(&xdr_encode,sent, MAX_MSG_SIZE, XDR_ENCODE);
@@ -47,10 +43,12 @@ void connectToServer(Server* server,char* serverAddress){
 	fflush(stdout);
 
 	/*encodage du player*/
+	/*
 	if(xdr_player(&xdr_encode, &player) == FALSE){
 		printf("fail to encode \n");
 		fflush(stdout);
 	}
+	*/
 	/*
 	char machaine[80];
 	strcpy(machaine, "hello world");

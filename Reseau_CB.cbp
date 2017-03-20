@@ -31,34 +31,34 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="Client/character.c">
+		<Unit filename="character.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Client/character.h" />
-		<Unit filename="Client/client.c">
+		<Unit filename="character.h" />
+		<Unit filename="client.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Client/client.h" />
-		<Unit filename="Client/game.c">
+		<Unit filename="client.h" />
+		<Unit filename="game.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Client/game.h" />
-		<Unit filename="Client/map.c">
+		<Unit filename="game.h" />
+		<Unit filename="map.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Client/map.h" />
-		<Unit filename="Client/object.c">
+		<Unit filename="map.h" />
+		<Unit filename="object.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Client/object.h" />
-		<Unit filename="Client/player.c">
+		<Unit filename="object.h" />
+		<Unit filename="player.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Client/player.h" />
-		<Unit filename="Client/tile.c">
+		<Unit filename="player.h" />
+		<Unit filename="tile.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Client/tile.h" />
+		<Unit filename="tile.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />

@@ -13,5 +13,7 @@ typedef struct{
 	long id;
 }Character;
 
+bool_t xdr_Charcter(XDR* pt_xdr, Character* character);
+
 #endif
 

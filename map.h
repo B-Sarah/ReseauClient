@@ -5,9 +5,11 @@
 #include <rpc/xdr.h>
 
 #include "tile.h"
+#define MAP_WIDTH 10
+#define MAP_HEIGHT 10
 
 typedef struct{
-	Tile tiles[10][10];
+	Tile tiles[MAP_WIDTH][MAP_HEIGHT];
 	int width;
 	int height;
 }Map;

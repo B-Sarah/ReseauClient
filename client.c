@@ -81,58 +81,6 @@ void connectToServer(Server* server,char* serverAddress){
 	/*printf("message has been sent \"%X\"\n", sent[3]);
 	fflush(stdout);*/
 }
-/* xdr_Player */
-bool_t xdr_player(XDR* pt_xdr, Player* player){
-	char* pName = player->name;
-	char* pPwd = player->password;
-	char** ppName = &pName;
-	char** ppPwd = &pPwd;
 
-	return(xdr_string(pt_xdr, ppName, 30) &&
-			xdr_string(pt_xdr, ppPwd, 20));
-
-}
-
-/* xdr_Character */
-
-bool_t xdr_Charcter(XDR* pt_xdr, Character* character){
-	char* pPseudo = character->pseudo;
-	char** ppPseudo = &pPseudo;
-	char skin = character->skin;
-	char* pSkin = &skin;
-	int* hp = &character->hp;
-	int* x = &character->x;
-	int* y = &character->y;
-
-	return(xdr_string(pt_xdr, ppPseudo, 30) &&
-			xdr_char(pt_xdr, pSkin) &&
-			xdr_int(pt_xdr, hp) &&
-			xdr_int(pt_xdr, x) &&
-			xdr_int(pt_xdr, y));
-
-}
-
-/* xdr_Tile */
-
-bool_t xdr_Tile(XDR* pt_xdr, Tile* tile){
-	return 0;
-
-}
-
-/* xdr_Map */
-/*
-bool_t xdr_player(XDR* pt_xdr, Player* player){
-	char* pName = player->name;
-	char* pPwd = player->password;
-	char** ppName = &pName;
-	char** ppPwd = &pPwd;
-Tile tiles[][];
-	int width;
-	int height;
-
-	return(xdr_string(pt_xdr, ppName, 30) &&
-			xdr_string(pt_xdr, ppPwd, 20));
-
-}*/
 
 

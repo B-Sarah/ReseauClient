@@ -1,4 +1,4 @@
-#ifndef OBJECT_H 
+#ifndef OBJECT_H
 #define OBJECT_H
 
 #include <stdio.h>
@@ -11,5 +11,7 @@ typedef struct {
  	int y;
 
 }Object;
+
+bool_t xdr_object(XDR* pt_xdr, Object* object);
 
 #endif

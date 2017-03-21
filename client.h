@@ -13,31 +13,35 @@
 #include <string.h>
 #include <rpc/xdr.h>
 
+#include "server.h"
 #include "game.h"
 #include "configClient.h"
 
 #define PORT 3000
 #define MAX_MSG_SIZE 1024
 
-extern XDR xdr_encode;
-extern XDR xdr_decode;
+XDR xdr_encode;
+XDR xdr_decode;
 
-extern char sent[MAX_MSG_SIZE];
-extern char received[MAX_MSG_SIZE];
+char sent[MAX_MSG_SIZE];
+char received[MAX_MSG_SIZE];
 
-
-typedef struct{
-	int socket;
-	struct sockaddr_in address;
-	unsigned short port;
-	struct hostent* host;
-}Server;
 
 void connectToServer(Server* server,char* serverAddress);
-void  initConnection(Server** server, char* serverAddress);
-void sendMessage(Server* server, char* msg, int encodedSize);
-void initXdr();
-int decodeMessage(char* serverMsg);
+void disconnectFromServer(Server* server);
+void initConnection(Server** server, char* serverAddress);
 
+void startServerHandler(Server* server);
+void receiveMessages(void* server);
+
+void sendMessage(Server* server, int encodedSize);
+int decodeMessage(void** gameObject);
+
+void initXdr();
+void hasBeenDeconected();
+
+void encodePlayer(Server* server, Player* player);
+void encodeCharacter(Server* server, Character* character);
+void encodeObject(Server* server, Object* object);
 
 #endif

@@ -9,6 +9,7 @@ typedef struct {
 	char skin;
 	int x;
  	int y;
+ 	long id;
 
 }Object;
 

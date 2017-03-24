@@ -20,3 +20,7 @@ bool_t xdr_character(XDR* pt_xdr, Character* character){
             xdr_long(pt_xdr, id));
 
 }
+
+void displayCharacter(Character character){
+    putchar(character.skin);
+}

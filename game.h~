@@ -1,0 +1,24 @@
+#ifndef GAME_H 
+#define GAME_H
+
+
+
+#include "character.h"
+#include "tile.h"
+#include "map.h"
+#include "player.h"
+#include "object.h"
+#include "client.h"
+
+typedef struct{
+	Map map;
+	Character* character[100];
+	Object* object[40];
+	
+}Game;
+
+
+void mainGameLoop();
+
+
+#endif

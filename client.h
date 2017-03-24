@@ -7,11 +7,14 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <string.h>
 #include <rpc/xdr.h>
+
+#include "time.h"
 
 #include "server.h"
 #include "game.h"
@@ -23,25 +26,29 @@
 XDR xdr_encode;
 XDR xdr_decode;
 
+Server server;
+
+pthread_t readThread;
+
 char sent[MAX_MSG_SIZE];
 char received[MAX_MSG_SIZE];
 
 
-void connectToServer(Server* server,char* serverAddress);
-void disconnectFromServer(Server* server);
-void initConnection(Server** server, char* serverAddress);
+int connectToServer(char* serverAddress);
+int timeoutConnect(int timeout);
+void disconnectFromServer();
+void initConnection(char* serverAddress);
 
-void startServerHandler(Server* server);
-void receiveMessages(void* server);
+void startServerHandler();
+void* receiveMessages(void*);
 
-void sendMessage(Server* server, int encodedSize);
-int decodeMessage(void** gameObject);
+void sendMessage(int encodedSize);
+int decodeMessage(Character* character, Player* player, Object* object );
 
 void initXdr();
-void hasBeenDeconected();
 
-void encodePlayer(Server* server, Player* player);
-void encodeCharacter(Server* server, Character* character);
-void encodeObject(Server* server, Object* object);
+void encodePlayer(Player* player);
+void encodeCharacter(Character* character);
+void encodeObject(Object* object);
 
 #endif

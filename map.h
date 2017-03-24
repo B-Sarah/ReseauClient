@@ -6,7 +6,11 @@
 
 #include "tile.h"
 #define MAP_WIDTH 10
-#define MAP_HEIGHT 10
+#define MAP_HEIGHT 20
+
+typedef enum{
+    UP, DOWN, LEFT, RIGHT
+}Direction;
 
 typedef struct{
 	Tile tiles[MAP_WIDTH][MAP_HEIGHT];
@@ -14,6 +18,12 @@ typedef struct{
 	int height;
 }Map;
 
-
+void displayMap(Map map);
+void initMap(const char* filePath, Map* map);
+Tile* tileAt(Map* map, int x, int y);
+void moveCharacterTo(Character *character, Map* map,int x, int y);
+void moveCharacter(Character *character, Map* map, Direction direction);
+void placeCharacter(Character* character, Map* map);
 
 #endif
+

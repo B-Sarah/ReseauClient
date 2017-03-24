@@ -15,3 +15,11 @@ bool_t xdr_object(XDR* pt_xdr, Object* object){
                 xdr_long(pt_xdr, id));
 
 }
+
+
+void displayObject(Object object){
+    putchar(object.skin);
+
+}
+
+

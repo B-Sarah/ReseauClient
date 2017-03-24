@@ -1,36 +1,74 @@
 #include "client.h"
 
-void connectToServer(Server* server,char* serverAddress){
+int connectToServer(char* serverAddress){
+    if(server.socket != 0) return -1;
 
-    initConnection(&server, serverAddress);
+    printf("Connexion en cours...\n");
+    initConnection(serverAddress);
 
 	// demande de connexion au serveur
-	if(connect(server->socket, (struct sockaddr*)(&(server->address)), sizeof(server->address)) == -1){
-		perror("connect");
-		exit(3);
+	if(!timeoutConnect(5)){
+        printf("Connexion echouee !\n\n");
+        return -1;
 	}
+	game.isRunning = 1;
     initXdr();
 
-	printf("Connexion acceptee\n");
 	fflush(stdout);
 
+    startServerHandler();
+    return 0;
+}
 
+int timeoutConnect(int timeout) {
+    fd_set fdset;
+    struct timeval tv;
+
+    int flags = fcntl(server.socket, F_GETFL, NULL);
+    flags |= O_NONBLOCK;
+    fcntl(server.socket, F_SETFL, flags);
+
+    connect(server.socket, (struct sockaddr *)&server.address, sizeof(server.address));
+
+    FD_ZERO(&fdset);
+    FD_SET(server.socket, &fdset);
+    tv.tv_sec = 10;             /* 10 second timeout */
+    tv.tv_usec = 0;
+
+    if (select(server.socket + 1, NULL, &fdset, NULL, &tv) == 1)
+    {
+        int so_error;
+        socklen_t len = sizeof so_error;
+
+        getsockopt(server.socket, SOL_SOCKET, SO_ERROR, &so_error, &len);
+
+        flags = fcntl(server.socket, F_GETFL, NULL);
+        flags &= ~O_NONBLOCK;
+        fcntl(server.socket, F_SETFL, flags);
+        if (so_error == 0) {
+
+            return 1;
+        }
+    }
+    close(server.socket);
+    server.socket = 0;
+    return 0;
 }
 
 
-int decodeMessage(void** gameObject)
+int decodeMessage(Character* character, Player* player, Object* object )
 {
-    if(xdr_player(&xdr_decode, *gameObject)){
+    if(xdr_player(&xdr_decode,player)){
 
         return 2;
     }
 
-    else if(xdr_character(&xdr_decode, *gameObject)){
+    else if(xdr_character(&xdr_decode,character)){
 
         return 3;
     }
 
-     else if(xdr_object(&xdr_decode, *gameObject)){
+     else if(xdr_object(&xdr_decode, object)){
 
         return 4;
     }
@@ -39,12 +77,11 @@ int decodeMessage(void** gameObject)
 
 }
 
-void startServerHandler(Server* server){
+void startServerHandler(){
     int pthread_return;
-	pthread_t thread;
 
 	//creation de thread d'acceptation de clients
-	pthread_return = pthread_create(&thread, NULL, receiveMessages, (void*)(server));
+	pthread_return = pthread_create(&readThread, NULL, receiveMessages, NULL);
 
 	if(pthread_return){
 		printf("ERROR; return code from pthread_create() is %d\n", pthread_return);
@@ -53,34 +90,34 @@ void startServerHandler(Server* server){
 }
 
 
-void receiveMessages(void* _server){
-    void* gameObject;
-    Server* server = (Server*)_server;
-
+void* receiveMessages(void* arg){
+    Player player;
+    Character character;
+    Object object;
 
     while (game.isRunning){
         int len;
-        if((len = read(server->socket, received, MAX_MSG_SIZE)) < 0){
+        memset(received, '\0',MAX_MSG_SIZE);
+        if((len = read(server.socket, received, MAX_MSG_SIZE)) < 0){
             perror("read");
         }
         if(len == 0){
             hasBeenDeconected();
             break;
         }
-        printf("lu : %d\n", len);
+        //printf("lu : %d\n", len);
 
-        int action = decodeMessage(&gameObject);
+        int action = decodeMessage(&character, &player, &object);
 
         switch(action){
         case 2:
-            updatePlayer((Player*)gameObject);
-            printf("this is an update dude it worked !! %d\n",((Player*)gameObject)->logged);
+            updatePlayer(&player);
             break;
         case 3:
-            updateCharacter((Character*)gameObject);
+            updateCharacter(&character);
             break;
         case 4:
-            updateObject((Object*)gameObject);
+            updateObject(&object);
             break;
         default:
             printf("Error occured while decoding message \n");
@@ -89,28 +126,26 @@ void receiveMessages(void* _server){
         memset(received, '\0',MAX_MSG_SIZE);
 
     }
+    pthread_exit(NULL);
 }
 
-void hasBeenDeconected(){
-    printf("Vous avez été déconnectée du serveur \n");
- }
 
-
-
-void sendMessage(Server* server, int encodedSize){
+void sendMessage( int encodedSize){
 /*envoi du message contenant le player encode*/
-	if(send(server->socket, sent,encodedSize, 0) != encodedSize){
+    printf("Message envoyé : %s\n", sent);
+	if(send(server.socket, sent,encodedSize, 0) != encodedSize){
 		perror("write");
 	}
 }
 
 
-void encodePlayer(Server* server, Player* player){
+void encodePlayer(Player* player){
     memset(sent, '\0',MAX_MSG_SIZE);
 
+    xdr_setpos(&xdr_encode, 0);
     if(xdr_player(&xdr_encode, player)){
         int encodedSize = xdr_getpos(&xdr_encode);
-        sendMessage(server, encodedSize);
+        sendMessage(encodedSize);
     }
     else{
         printf("Erreur d'envoi de la trame joueur! \n");
@@ -121,12 +156,13 @@ void encodePlayer(Server* server, Player* player){
 
 }
 
-void encodeCharacter(Server* server, Character* character){
+void encodeCharacter(Character* character){
     memset(sent, '\0',MAX_MSG_SIZE);
 
+    xdr_setpos(&xdr_encode, 0);
     if(xdr_character(&xdr_encode, character)){
         int encodedSize = xdr_getpos(&xdr_encode);
-        sendMessage(server, encodedSize);
+        sendMessage(encodedSize);
     }
     else{
         printf("Erreur d'envoi de la trame personnage! \n");
@@ -134,12 +170,12 @@ void encodeCharacter(Server* server, Character* character){
 }
 
 
-void encodeObject(Server* server, Object* object){
+void encodeObject(Object* object){
     memset(sent, '\0',MAX_MSG_SIZE);
 
     if(xdr_object(&xdr_encode, object)){
         int encodedSize = xdr_getpos(&xdr_encode);
-        sendMessage(server, encodedSize);
+        sendMessage(encodedSize);
     }
     else{
         printf("Erreur d'envoi de la trame objet-jeu! \n");
@@ -157,35 +193,44 @@ void initXdr(){
 
 
 
-void initConnection(Server ** server, char* serverAddress){
+void initConnection(char* serverAddress){
 
-    memset(&(*(server))->address, '\0', sizeof((* (server))->address));
+    memset(&(server.address), '\0', sizeof(server.address));
 
 	// creation de la socket locale
-	if(((*(server))->socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+	if((server.socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
 		perror("socket");
 		exit(1);
 	}
 
 	// recuperation de l'adresse ip du serveur
-	if(((*(server))->host = gethostbyname(serverAddress)) == NULL){
+	if((server.host = gethostbyname(serverAddress)) == NULL){
 		perror("gethostbyname");
 		exit(2);
 	}
 
 	// preparation de l'adresse du serveur
-	(*(server))->port = (unsigned short)PORT;
-	(*(server))->address.sin_family = AF_INET;
-	(*(server))->address.sin_port = htons((*(server))->port);
-	bcopy((*(server))->host->h_addr, &((*(server))->address).sin_addr, (*(server))->host->h_length);
+	server.port = (unsigned short)PORT;
+	server.address.sin_family = AF_INET;
+	server.address.sin_port = htons(server.port);
+	bcopy(server.host->h_addr, &(server.address.sin_addr), server.host->h_length);
 
 	//printf("Connexion en cours...\n");
 	//fflush(stdout);
 
 }
 
-void disconnectFromServer(Server* server){
-    close(server->socket);
+void disconnectFromServer(){
+    game.isRunning = 0;
+    if(server.socket == 0) return;
+    /*memset(sent, '\0',MAX_MSG_SIZE);
+    strcpy(sent, "disconnect");
+    sendMessage(strlen(sent));*/
+
+    close(server.socket);
+    server.socket = 0;
+
+    pthread_cancel(readThread);
 }
 
 

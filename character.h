@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <rpc/xdr.h>
 
+const static char OUR_CHARACTER = '@';
+const static char OTHER_CHARACTER = 'E';
+
 typedef struct{
 	char pseudo[30];
 	char skin;
@@ -15,5 +18,8 @@ typedef struct{
 
 bool_t xdr_character(XDR* pt_xdr, Character* character);
 
+void displayCharacter(Character character);
+
 #endif
+
 

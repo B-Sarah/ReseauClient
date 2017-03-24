@@ -1,0 +1,136 @@
+# depslib dependency file v1.0
+1490010641 source:/home/salex/Reseau_CB/Client/character.c
+
+1490011611 source:/home/salex/Reseau_CB/Client/client.c
+	"client.h"
+
+1490010991 /home/salex/Reseau_CB/Client/client.h
+	<stdio.h>
+	<stdlib.h>
+	<unistd.h>
+	<errno.h>
+	<sys/types.h>
+	<netdb.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<pthread.h>
+	<string.h>
+	<rpc/xdr.h>
+	"game.h"
+
+1490010641 /home/salex/Reseau_CB/Client/game.h
+	"character.h"
+	"tile.h"
+	"map.h"
+	"player.h"
+	"object.h"
+	"client.h"
+
+1490011877 /home/salex/Reseau_CB/Client/character.h
+	<stdio.h>
+	<rpc/xdr.h>
+
+1490011656 /home/salex/Reseau_CB/Client/tile.h
+	<stdio.h>
+	<rpc/xdr.h>
+	"character.h"
+	"object.h"
+
+1490010641 /home/salex/Reseau_CB/Client/object.h
+	<stdio.h>
+	<rpc/xdr.h>
+
+1490011836 /home/salex/Reseau_CB/Client/map.h
+	<stdio.h>
+	<rpc/xdr.h>
+	"tile.h"
+
+1490010953 /home/salex/Reseau_CB/Client/player.h
+
+1490011853 source:/home/salex/Reseau_CB/Client/game.c
+	"game.h"
+
+1490010641 source:/home/salex/Reseau_CB/Client/map.c
+
+1490010641 source:/home/salex/Reseau_CB/Client/object.c
+
+1490010641 source:/home/salex/Reseau_CB/Client/player.c
+
+1490010641 source:/home/salex/Reseau_CB/Client/tile.c
+
+1490332168 source:/home/salex/Reseau_CB/character.c
+	"character.h"
+
+1490347170 source:/home/salex/Reseau_CB/client.c
+	"client.h"
+
+1490328840 /home/salex/Reseau_CB/client.h
+	<stdio.h>
+	<stdlib.h>
+	<unistd.h>
+	<errno.h>
+	<sys/types.h>
+	<netdb.h>
+	<fcntl.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<pthread.h>
+	<string.h>
+	<rpc/xdr.h>
+	"time.h"
+	"server.h"
+	"game.h"
+	"configClient.h"
+
+1490339943 /home/salex/Reseau_CB/game.h
+	"string.h"
+	<poll.h>
+	"character.h"
+	"tile.h"
+	"map.h"
+	"player.h"
+	"object.h"
+	"client.h"
+
+1490332363 /home/salex/Reseau_CB/character.h
+	<stdio.h>
+	<rpc/xdr.h>
+
+1490334440 /home/salex/Reseau_CB/tile.h
+	<stdio.h>
+	<rpc/xdr.h>
+	"character.h"
+	"object.h"
+
+1490300737 /home/salex/Reseau_CB/object.h
+	<stdio.h>
+	<rpc/xdr.h>
+
+1490340453 /home/salex/Reseau_CB/map.h
+	<stdio.h>
+	<rpc/xdr.h>
+	"tile.h"
+
+1490063808 /home/salex/Reseau_CB/player.h
+	<stdio.h>
+	<rpc/xdr.h>
+
+1490348090 source:/home/salex/Reseau_CB/game.c
+	"game.h"
+
+1490341339 source:/home/salex/Reseau_CB/map.c
+	"map.h"
+
+1490307748 source:/home/salex/Reseau_CB/object.c
+	"object.h"
+
+1490319075 source:/home/salex/Reseau_CB/player.c
+	"player.h"
+
+1490340657 source:/home/salex/Reseau_CB/tile.c
+	"tile.h"
+
+1490017207 /home/salex/Reseau_CB/configClient.h
+
+1490059117 /home/salex/Reseau_CB/server.h
+

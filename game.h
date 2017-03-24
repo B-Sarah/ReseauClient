@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "string.h"
+#include <poll.h>
 
 #include "character.h"
 #include "tile.h"
@@ -18,6 +19,7 @@
 #define ACCOUNT_MENU 2
 #define PLAY_MENU 3
 #define QUIT_MENU 4
+#define WAITING_MENU 5
 
 extern char* serverAddress;
 int menuState;
@@ -33,14 +35,19 @@ typedef struct{
 extern Game game;
 
 void mainGameLoop();
+void readInput(char* input);
+void handleInput(char* inputString);
 
 Character* retrieveCharacter(int characterId);
+int findCharacterSlot();
 Object* retrieveObject(int objectId);
 
 
 void updatePlayer(Player* player);
 void updateCharacter(Character* character);
 void updateObject(Object* object);
+
+void hasBeenDeconected();
 
 void createPlayerAccount();
 void createPlayerAccount();
@@ -53,6 +60,7 @@ void mainMenu();
 void loginMenu(Server* server);
 void accountMenu();
 void playMenu();
-int quitMenu(Server* server);
+int quitMenu();
+void informUser();
 
 #endif

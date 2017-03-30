@@ -5,7 +5,7 @@ char* serverAddress;
 
 void mainGameLoop(){
     initMap("map1", &game.map);
-    char input[10];
+    char input[10] = {0};
 
     /*Character character;
     character.skin = '@';
@@ -15,18 +15,18 @@ void mainGameLoop(){
     game.characters[0] = &character;
 
     moveCharacterTo(&character, &game.map, 2,2);
-
-    game.isRunning = 1;*/
+*/
+    game.isRunning = 1;
     Character c;
     c.x = -1;
     c.id = game.player->character_id;
-    printf("id %d\n", c.id);
-    getchar();
+    printf("id %ld\n", c.id);
+    //getchar();
     encodeCharacter(&c);
 
 
 	while(game.isRunning){
-        displayMap(game.map);
+       displayMap(game.map);
         readInput(input);
         handleInput(input);
 	}
@@ -126,7 +126,8 @@ void updateCharacter(Character* character){
         }
     }
     strcpy(updateCharacter->pseudo, character->pseudo);
-    updateCharacter->skin = character->skin;
+
+    updateCharacter->skin[0] = character->skin[0];
 
     updateCharacter->id = character->id;
 
@@ -153,10 +154,10 @@ void informUser(){
         printf(game.player->logged ? "Creation du compte reussie !\n\n" : "Echec, le d'utilisateur existe deja !\n\n");
         game.player->logged = 0;
         game.player->newAccount = 0;
-        if(game.player->logged) menuState = PLAY_MENU; else{
-            menuState = MAIN_MENU;
+        //if(game.player->logged) menuState = PLAY_MENU; else{
+        menuState = MAIN_MENU;
             disconnectFromServer();
-        }
+        //}
     }
     else{
         printf(game.player->logged ? "Connexion reussie !\n\n" : "Connexion refusée, nom d'utilisateur ou mot de passe incorrect !\n\n");
@@ -173,38 +174,33 @@ void informUser(){
 
 int main(int argc, char** argv){
     serverAddress = argv[1];
-	//(1)
-	//Connexion
-	//Quit
-
-	//-> Connexion tcp + requete de log + reponse log
-	// on creet un client
-	// on se connecte au serveur
-	// on envoie une requete de log
-	// on attend la réponse
-	// quand reponse : si positive, on passe à (2)
-	// sinon on retourne a (1)
-
-
-	//(2)
-	//Play
-	//Deconnexion
-	//Quit
-
-	//-> Play
-	// le client demande info au serveur
-	// recup d'info par le client
-	//nouveau game initialisé avec les infos de personnages du serveur
-	// et des infos locales (fichier, ou codé en dur)
-
-	//lancer le mainGameLoop avec game initialisé
 
     game.isRunning = 0;
     Player p;
+    p.newAccount = 0;
+    p.logged = 0;
     game.player = &p;
 	Server server;
 
     menuHandler(&server);
+
+
+/* DEBUG
+    Character character;
+    strcpy(character.pseudo, "droweed");
+    character.hp = 10;
+    strcpy(character.skin, "@");
+    character.id = 27;
+    character.x = 0;
+    character.y = 0;
+
+
+  if(connectToServer(serverAddress) == 0){
+        encodeCharacter(&character);
+    }
+
+
+*/
 }
 
 void menuHandler(Server* server){
@@ -227,6 +223,8 @@ void menuHandler(Server* server){
         case QUIT_MENU:
             if(quitMenu(server)) return;
             break;
+	case WAITING_MENU:
+		break;
         }
     }
 

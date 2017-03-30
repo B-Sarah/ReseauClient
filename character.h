@@ -9,7 +9,7 @@ const static char OTHER_CHARACTER = 'E';
 
 typedef struct{
 	char pseudo[30];
-	char skin;
+	char skin[2];
 	int hp;
 	int x;
 	int y;

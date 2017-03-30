@@ -58,22 +58,26 @@ int timeoutConnect(int timeout) {
 
 int decodeMessage(Character* character, Player* player, Object* object )
 {
-    if(xdr_player(&xdr_decode,player)){
-
-        return 2;
-    }
-
-    else if(xdr_character(&xdr_decode,character)){
+    if(xdr_character(&xdr_decode,character)){
 
         return 3;
     }
 
-     else if(xdr_object(&xdr_decode, object)){
 
-        return 4;
+    else if(xdr_player(&xdr_decode,player)){
+
+        return 2;
     }
 
-    else return -1;
+   //  else if(xdr_object(&xdr_decode, object)){
+
+//        return 4;
+  //  }
+
+	xdr_setpos(&xdr_decode, 0);
+	memset(received, 0, MAX_MSG_SIZE);
+	return -1;
+    //else return -1;
 
 }
 
@@ -91,11 +95,12 @@ void startServerHandler(){
 
 
 void* receiveMessages(void* arg){
-    Player player;
-    Character character;
-    Object object;
+
 
     while (game.isRunning){
+    Player* player = (Player*)malloc(sizeof(Player));
+    Character* character = (Character*)malloc(sizeof(Character));
+    Object* object = (Object*)malloc(sizeof(Object));
         int len;
         memset(received, '\0',MAX_MSG_SIZE);
         if((len = read(server.socket, received, MAX_MSG_SIZE)) < 0){
@@ -107,30 +112,33 @@ void* receiveMessages(void* arg){
         }
         //printf("lu : %d\n", len);
 
-        int action = decodeMessage(&character, &player, &object);
+        int action = decodeMessage(character, player, object);
 
         switch(action){
         case 2:
-            updatePlayer(&player);
+            updatePlayer(player);
             break;
         case 3:
-            updateCharacter(&character);
+            updateCharacter(character);
             break;
         case 4:
-            updateObject(&object);
+            updateObject(object);
             break;
         default:
             printf("Error occured while decoding message \n");
 
         }
         memset(received, '\0',MAX_MSG_SIZE);
-
+	free(player);
+	free(character);
+	free(object);	
     }
+
     pthread_exit(NULL);
 }
 
 
-void sendMessage( int encodedSize){
+void sendMessage(int encodedSize){
 /*envoi du message contenant le player encode*/
     printf("Message envoyé : %s\n", sent);
 	if(send(server.socket, sent,encodedSize, 0) != encodedSize){
@@ -143,8 +151,10 @@ void encodePlayer(Player* player){
     memset(sent, '\0',MAX_MSG_SIZE);
 
     xdr_setpos(&xdr_encode, 0);
+    printf("%p\n",player); 
     if(xdr_player(&xdr_encode, player)){
         int encodedSize = xdr_getpos(&xdr_encode);
+	printf("encoded size %d", encodedSize);
         sendMessage(encodedSize);
     }
     else{
@@ -160,8 +170,10 @@ void encodeCharacter(Character* character){
     memset(sent, '\0',MAX_MSG_SIZE);
 
     xdr_setpos(&xdr_encode, 0);
+    printf(" character : %p\n",character); 
     if(xdr_character(&xdr_encode, character)){
         int encodedSize = xdr_getpos(&xdr_encode);
+	//printf("encoded size %d", encodedSize);
         sendMessage(encodedSize);
     }
     else{

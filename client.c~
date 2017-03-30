@@ -1,158 +1,248 @@
-cd .. #include "client.h"
+#include "client.h"
+
+int connectToServer(char* serverAddress){
+    if(server.socket != 0) return -1;
+
+    printf("Connexion en cours...\n");
+    initConnection(serverAddress);
+
+	// demande de connexion au serveur
+	if(!timeoutConnect(5)){
+        printf("Connexion echouee !\n\n");
+        return -1;
+	}
+	game.isRunning = 1;
+    initXdr();
+
+	fflush(stdout);
+
+    startServerHandler();
+    return 0;
+}
+
+int timeoutConnect(int timeout) {
+    fd_set fdset;
+    struct timeval tv;
+
+    int flags = fcntl(server.socket, F_GETFL, NULL);
+    flags |= O_NONBLOCK;
+    fcntl(server.socket, F_SETFL, flags);
+
+    connect(server.socket, (struct sockaddr *)&server.address, sizeof(server.address));
+
+    FD_ZERO(&fdset);
+    FD_SET(server.socket, &fdset);
+    tv.tv_sec = 10;             /* 10 second timeout */
+    tv.tv_usec = 0;
+
+    if (select(server.socket + 1, NULL, &fdset, NULL, &tv) == 1)
+    {
+        int so_error;
+        socklen_t len = sizeof so_error;
+
+        getsockopt(server.socket, SOL_SOCKET, SO_ERROR, &so_error, &len);
+
+        flags = fcntl(server.socket, F_GETFL, NULL);
+        flags &= ~O_NONBLOCK;
+        fcntl(server.socket, F_SETFL, flags);
+        if (so_error == 0) {
+
+            return 1;
+        }
+    }
+    close(server.socket);
+    server.socket = 0;
+    return 0;
+}
 
 
-void connectToServer(Server* server,char* serverAddress){
-	XDR xdr_encode, xdr_decode;
-	char sent[MAX_MSG_SIZE] = {'\0'};
-	char received[MAX_MSG_SIZE] = {'\0'};
-	Player player;
+int decodeMessage(Character* character, Player* player, Object* object )
+{
+    if(xdr_character(&xdr_decode,character)){
 
-	strcpy(player.name, "Dorwed");
-	strcpy(player.password, "ifucanreadthis");
-	
+        return 3;
+    }
+
+
+    else if(xdr_player(&xdr_decode,player)){
+
+        return 2;
+    }
+
+   //  else if(xdr_object(&xdr_decode, object)){
+
+//        return 4;
+  //  }
+
+	xdr_setpos(&xdr_decode, 0);
+	memset(received, 0, MAX_MSG_SIZE);
+	return -1;
+    //else return -1;
+
+}
+
+void startServerHandler(){
+    int pthread_return;
+
+	//creation de thread d'acceptation de clients
+	pthread_return = pthread_create(&readThread, NULL, receiveMessages, NULL);
+
+	if(pthread_return){
+		printf("ERROR; return code from pthread_create() is %d\n", pthread_return);
+		return;
+	}
+}
+
+
+void* receiveMessages(void* arg){
+
+
+    while (game.isRunning){
+    Player* player = (Player*)malloc(sizeof(Player));
+    Character* character = (Character*)malloc(sizeof(Character));
+    Object* object = (Object*)malloc(sizeof(Object));
+        int len;
+        memset(received, '\0',MAX_MSG_SIZE);
+        if((len = read(server.socket, received, MAX_MSG_SIZE)) < 0){
+            perror("read");
+        }
+        if(len == 0){
+            hasBeenDeconected();
+            break;
+        }
+        //printf("lu : %d\n", len);
+
+        int action = decodeMessage(character, player, object);
+
+        switch(action){
+        case 2:
+            updatePlayer(player);
+            break;
+        case 3:
+            updateCharacter(character);
+            break;
+        case 4:
+            updateObject(object);
+            break;
+        default:
+            printf("Error occured while decoding message \n");
+
+        }
+        memset(received, '\0',MAX_MSG_SIZE);
+	free(player);
+	free(character);
+	free(object);	
+    }
+
+    pthread_exit(NULL);
+}
+
+
+void sendMessage(int encodedSize){
+/*envoi du message contenant le player encode*/
+    printf("Message envoyé : %s\n", sent);
+	if(send(server.socket, sent,encodedSize, 0) != encodedSize){
+		perror("write");
+	}
+}
+
+
+void encodePlayer(Player* player){
+    memset(sent, '\0',MAX_MSG_SIZE);
+
+    xdr_setpos(&xdr_encode, 0);
+    printf("%p\n",player); 
+    if(xdr_player(&xdr_encode, player)){
+        int encodedSize = xdr_getpos(&xdr_encode);
+printf("encoded size %d", encodedSize);
+        sendMessage(encodedSize);
+    }
+    else{
+        printf("Erreur d'envoi de la trame joueur! \n");
+    }
+
+
+
+
+}
+
+void encodeCharacter(Character* character){
+    memset(sent, '\0',MAX_MSG_SIZE);
+
+    xdr_setpos(&xdr_encode, 0);
+    printf(" character : %p\n",character); 
+    if(xdr_character(&xdr_encode, character)){
+        int encodedSize = xdr_getpos(&xdr_encode);
+	//printf("encoded size %d", encodedSize);
+        sendMessage(encodedSize);
+    }
+    else{
+        printf("Erreur d'envoi de la trame personnage! \n");
+    }
+}
+
+
+void encodeObject(Object* object){
+    memset(sent, '\0',MAX_MSG_SIZE);
+
+    if(xdr_object(&xdr_encode, object)){
+        int encodedSize = xdr_getpos(&xdr_encode);
+        sendMessage(encodedSize);
+    }
+    else{
+        printf("Erreur d'envoi de la trame objet-jeu! \n");
+    }
+}
+
+
+
+void initXdr(){
 	/*creation des flots */
 	xdrmem_create(&xdr_encode,sent, MAX_MSG_SIZE, XDR_ENCODE);
 	xdrmem_create(&xdr_decode,received, MAX_MSG_SIZE, XDR_DECODE);
 
-	memset(&server->address, '\0', sizeof(server->address));
+}
+
+
+
+void initConnection(char* serverAddress){
+
+    memset(&(server.address), '\0', sizeof(server.address));
+
 	// creation de la socket locale
-	if((server->socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+	if((server.socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
 		perror("socket");
-		exit(1);	
-	}	
+		exit(1);
+	}
 
 	// recuperation de l'adresse ip du serveur
-	if((server->host = gethostbyname(serverAddress)) == NULL){
+	if((server.host = gethostbyname(serverAddress)) == NULL){
 		perror("gethostbyname");
 		exit(2);
 	}
-	
+
 	// preparation de l'adresse du serveur
-	server->port = (unsigned short)PORT;
+	server.port = (unsigned short)PORT;
+	server.address.sin_family = AF_INET;
+	server.address.sin_port = htons(server.port);
+	bcopy(server.host->h_addr, &(server.address.sin_addr), server.host->h_length);
 
-	server->address.sin_family = AF_INET;
-	server->address.sin_port = htons(server->port);
-	bcopy(server->host->h_addr, &(server->address).sin_addr, server->host->h_length);
-
-	printf("Connexion en cours...\n");
-	fflush(stdout);
-
-	// demande de connexion au serveur
-	if(connect(server->socket, (struct sockaddr*)(&(server->address)), sizeof(server->address)) == -1){
-		perror("connect");
-		exit(3);
-	}
-
-	printf("Connexion acceptee\n");
-	fflush(stdout);
-
-	/*encodage du player*/
-	if(xdr_player(&xdr_encode, &player) == FALSE){
-		printf("fail to encode \n");
-		fflush(stdout);
-	}
-	/*
-	char machaine[80];
-	strcpy(machaine, "hello world");
-	char* pt = machaine;
-	*/
-	//int posBef = xdr_getpos(&xdr_encode);
-	//printf("Pos before %d\n", posBef);
-	/*
-	if(xdr_string(&xdr_encode,&pt, 80) == FALSE){
-		printf("fail to encode \n");
-		fflush(stdout);
-	}*/
-	int encodedSize = xdr_getpos(&xdr_encode);
-	printf("Encoded %d characters\n", encodedSize);
-
-	/*printf("message to send \"%s\"\n", sent);
-	printf("first charac \"%c\" : %d\n", sent[0], sent[0]);
-	printf("scnd charac \"%c\" : %d\n", sent[1], sent[1]);
-	printf("last charac \"%c\" : %d\n", sent[MAX_MSG_SIZE], sent[MAX_MSG_SIZE]);
-	fflush(stdout);
-	*/
-
-	/*envoi du message contenant le player encode*/
-	if(send(server->socket, sent, encodedSize, 0) != encodedSize){
-		perror("write");
-	}
-
-	/*printf("message has been sent \"%X\"\n", sent[3]);
-	fflush(stdout);*/
-}
-/* xdr_Player */
-bool_t xdr_player(XDR* pt_xdr, Player* player){
-	char* pName = player->name;
-	char* pPwd = player->password;
-	char** ppName = &pName;
-	char** ppPwd = &pPwd;
-
-	return(xdr_string(pt_xdr, ppName, 30) &&
-			xdr_string(pt_xdr, ppPwd, 20));
+	//printf("Connexion en cours...\n");
+	//fflush(stdout);
 
 }
 
-/* xdr_Character */
+void disconnectFromServer(){
+    game.isRunning = 0;
+    if(server.socket == 0) return;
+    /*memset(sent, '\0',MAX_MSG_SIZE);
+    strcpy(sent, "disconnect");
+    sendMessage(strlen(sent));*/
 
-bool_t xdr_Charcter(XDR* pt_xdr, Character* character){
-	char* pPseudo = character->pseudo;
-	char** ppPseudo = &pPseudo;
-	char skin = character->skin;
-	char* pSkin = &skin;
-	int hp = character->hp;
-	int x = character->x;
-	int y = character->y;
+    close(server.socket);
+    server.socket = 0;
 
-	return(xdr_string(pt_xdr, ppPseudo, 30) &&
-			xdr_char(pt_xdr, pSkin) &&
-			xdr_int(pt_xdr, hp) &&
-			xdr_int(pt_xdr, x) &&
-			xdr_int(pt_xdr, y));
-
+    pthread_cancel(readThread);
 }
 
-/* xdr_Tile */
-
-bool_t xdr_player(XDR* pt_xdr, Player* player){
-	char* pName = player->name;
-	char* pPwd = player->password;
-	char** ppName = &pName;
-	char** ppPwd = &pPwd;
-
-	return(xdr_string(pt_xdr, ppName, 30) &&
-			xdr_string(pt_xdr, ppPwd, 20));
-
-}
-
-/* xdr_Map */
-
-bool_t xdr_player(XDR* pt_xdr, Player* player){
-	char* pName = player->name;
-	char* pPwd = player->password;
-	char** ppName = &pName;
-	char** ppPwd = &pPwd;
-Tile tiles[][];
-	int width;
-	int height;
-
-	return(xdr_string(pt_xdr, ppName, 30) &&
-			xdr_string(pt_xdr, ppPwd, 20));
-
-}
-
-
-
-
-
-
-
-
-int main(int argc, char** argv){
-	Server server;
-
-	connectToServer(&server, argv[1]);
-
-	return 0;
-}
 

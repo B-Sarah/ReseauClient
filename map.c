@@ -31,10 +31,12 @@ void initMap(const char* filePath, Map* map){
 
             j++;
             if(c == '\n'){
+		map->width = j;
                 j = 0;
                 i++;
             }
         }
+	map->height = i;
         fclose(file);
 }
 
@@ -63,8 +65,8 @@ void moveCharacterTo(Character *character, Map* map, int x, int y){
 }
 
 
-void moveCharacter(Character *character, Map* map, Direction direction){
-    if(character == NULL) return;
+int moveCharacter(Character *character, Map* map, Direction direction){
+    if(character == NULL) return 0;
     Tile* prevTile = NULL;
     Tile* newTile = NULL;
 
@@ -92,9 +94,11 @@ void moveCharacter(Character *character, Map* map, Direction direction){
     if(newTile != NULL){
         if(isPassable(*newTile)){
             prevTile->character = 0;
+            /*if(newTile->character != NULL)
+                return 1;*/
             newTile->character = character;
         }
     }
-
+    return 0;
 }
 

@@ -40,6 +40,7 @@ void handleInput(char* inputString);
 
 Character* retrieveCharacter(int characterId);
 int findCharacterSlot();
+int findSlotOfCharacter(Character* c);
 Object* retrieveObject(int objectId);
 
 
@@ -55,6 +56,8 @@ void createPlayerAccount();
 void userChoiceToAction(Server* server, int choice);
 
 void menuHandler(Server* server);
+
+void fight(Character* charToFight);
 
 void mainMenu();
 void loginMenu(Server* server);

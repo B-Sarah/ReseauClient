@@ -17,13 +17,6 @@ void mainGameLoop(){
     moveCharacterTo(&character, &game.map, 2,2);
 */
     game.isRunning = 1;
-    Character c;
-    c.x = -1;
-    c.id = game.player->character_id;
-    printf("id %ld\n", c.id);
-    //getchar();
-    encodeCharacter(&c);
-
 
 	while(game.isRunning){
        displayMap(game.map);
@@ -38,23 +31,25 @@ void readInput(char* input){
 
 void handleInput(char* inputString){
 
+    int isFighting = 0;
+
     if(strcmp(inputString, "z") == 0){
-        moveCharacter(retrieveCharacter(game.player->character_id),
+        isFighting = moveCharacter(retrieveCharacter(game.player->character_id),
                       &game.map, UP);
         encodeCharacter(retrieveCharacter(game.player->character_id));
     }
     else if(strcmp(inputString, "s") == 0){
-        moveCharacter(retrieveCharacter(game.player->character_id),
+        isFighting = moveCharacter(retrieveCharacter(game.player->character_id),
                       &game.map, DOWN);
         encodeCharacter(retrieveCharacter(game.player->character_id));
     }
     else if(strcmp(inputString, "q") == 0){
-        moveCharacter(retrieveCharacter(game.player->character_id),
+        isFighting = moveCharacter(retrieveCharacter(game.player->character_id),
                       &game.map, LEFT);
         encodeCharacter(retrieveCharacter(game.player->character_id));
     }
     else if(strcmp(inputString, "d") == 0){
-        moveCharacter(retrieveCharacter(game.player->character_id),
+        isFighting = moveCharacter(retrieveCharacter(game.player->character_id),
                       &game.map, RIGHT);
         encodeCharacter(retrieveCharacter(game.player->character_id));
     }
@@ -62,7 +57,22 @@ void handleInput(char* inputString){
         game.isRunning = 0;
     }
 
+    /*if(isFighting){
+        fight(tileAt(&game.map, game.characters[0]->x, game.characters[0]->y)->character);
+    }*/
 
+}
+
+void fight(Character* charToFight){
+    int result = rand() % 2;
+    if(result == 1){
+        charToFight->hp = 0;
+    } else {
+        game.characters[0]->hp = 0;
+    }
+
+    encodeCharacter(charToFight);
+    encodeCharacter(game.characters[0]);
 }
 
 void addCharacter(Character* character){
@@ -92,6 +102,16 @@ int findCharacterSlot(){
 	return -1;
 }
 
+int findSlotOfCharacter(Character* c){
+    int i;
+
+	for(i = 0; i < MAX_CHARACTERS; i++){
+		if(game.characters[i] == c) return i;
+
+	}
+	return 0;
+}
+
 Object* retrieveObject(int objectId){
 	int i;
 
@@ -107,7 +127,7 @@ Object* retrieveObject(int objectId){
 
 
 void updatePlayer(Player* player){
-    printf("received update player\n");
+    //printf("received update player\n");
     game.player->logged = player->logged;
     game.player->newAccount = player->newAccount;
     game.player->character_id = player->character_id;
@@ -117,27 +137,56 @@ void updatePlayer(Player* player){
 }
 
 void updateCharacter(Character* character){
+	int slot = 0;
+
     Character* updateCharacter = retrieveCharacter(character->id);
     if(updateCharacter == NULL){
-        int slot = findCharacterSlot();
+        slot = findCharacterSlot();
         updateCharacter = (Character*)malloc(sizeof(Character));
         if(slot != -1){
             game.characters[slot] = updateCharacter;
         }
     }
+	slot = findSlotOfCharacter(updateCharacter);
     strcpy(updateCharacter->pseudo, character->pseudo);
 
-    updateCharacter->skin[0] = character->skin[0];
+    /*if(character->hp == 0){
+        if(slot == 0){
+            disconnectFromServer();
+            menuState = MAIN_MENU;
+            system("clear");
+            printf("**** Vous venez de mourir, veuillez vous reconnecter... (appuyez sur n'importe quelle touche) ****");
+            getchar();
+            game.isRunning = 0;
+        }
+        else{
+            tileAt(&game.map, game.characters[0]->x, game.characters[0]->y)->character = game.characters[0];
+            free(game.characters[slot]);
+
+        }
+        return;
+	}*/
+
+
+	if(slot == 0)
+	    updateCharacter->skin[0] = character->skin[0];
+	else
+		updateCharacter->skin[0] = 'E';
+
+    if(character->id == game.player->character_id)
+        updateCharacter->skin[0] = '@';
 
     updateCharacter->id = character->id;
 
     updateCharacter->hp = character->hp;
 
-    printf("retrieved id : %ld\n", updateCharacter->id);
+    //printf("retrieved id : %ld\n", updateCharacter->id);
 
     moveCharacterTo(updateCharacter, &game.map, character->x, character->y);
 
-    displayMap(game.map);
+	if(game.map.width != 0){
+	    displayMap(game.map);
+	}
 }
 
 void updateObject(Object* object){
@@ -173,6 +222,8 @@ void informUser(){
 
 
 int main(int argc, char** argv){
+    time_t t;
+    srand((unsigned)time(&t));
     serverAddress = argv[1];
 
     game.isRunning = 0;
@@ -207,6 +258,7 @@ void menuHandler(Server* server){
     menuState = MAIN_MENU;
 
     while(TRUE){
+        system("clear");
         switch(menuState){
         case MAIN_MENU:
             mainMenu();

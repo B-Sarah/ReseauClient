@@ -58,15 +58,16 @@ int timeoutConnect(int timeout) {
 
 int decodeMessage(Character* character, Player* player, Object* object )
 {
-    if(xdr_character(&xdr_decode,character)){
-
-        return 3;
-    }
 
 
-    else if(xdr_player(&xdr_decode,player)){
+
+     if(xdr_player(&xdr_decode,player)){
 
         return 2;
+    }
+	else if(xdr_character(&xdr_decode,character)){
+
+        return 3;
     }
 
    //  else if(xdr_object(&xdr_decode, object)){
@@ -102,36 +103,44 @@ void* receiveMessages(void* arg){
     Character* character = (Character*)malloc(sizeof(Character));
     Object* object = (Object*)malloc(sizeof(Object));
         int len;
-        memset(received, '\0',MAX_MSG_SIZE);
+        xdr_setpos(&xdr_decode, 0);
+	memset(received, 0, MAX_MSG_SIZE);
         if((len = read(server.socket, received, MAX_MSG_SIZE)) < 0){
             perror("read");
         }
+
+	//printf("Received a message.. decoding ...\n");
+
+
         if(len == 0){
             hasBeenDeconected();
             break;
         }
         //printf("lu : %d\n", len);
 
-        int action = decodeMessage(character, player, object);
+        //int action = decodeMessage(character, player, object);
 
-        switch(action){
-        case 2:
+        switch(received[0]){
+        case 'p':
+	    xdr_player(&xdr_decode, player);
             updatePlayer(player);
             break;
-        case 3:
+        case 'c':
+	    xdr_character(&xdr_decode, character);
             updateCharacter(character);
             break;
-        case 4:
+        case 'o':
+	    xdr_object(&xdr_decode, object);
             updateObject(object);
             break;
         default:
             printf("Error occured while decoding message \n");
 
         }
-        memset(received, '\0',MAX_MSG_SIZE);
+//        memset(received, '\0',MAX_MSG_SIZE);
 	free(player);
 	free(character);
-	free(object);	
+	free(object);
     }
 
     pthread_exit(NULL);
@@ -139,8 +148,9 @@ void* receiveMessages(void* arg){
 
 
 void sendMessage(int encodedSize){
+    usleep(200);
 /*envoi du message contenant le player encode*/
-    printf("Message envoyé : %s\n", sent);
+    //printf("Message envoyé : %s\n", sent);
 	if(send(server.socket, sent,encodedSize, 0) != encodedSize){
 		perror("write");
 	}
@@ -151,11 +161,12 @@ void encodePlayer(Player* player){
     memset(sent, '\0',MAX_MSG_SIZE);
 
     xdr_setpos(&xdr_encode, 0);
-    printf("%p\n",player); 
+    //printf("%p\n",player);
     if(xdr_player(&xdr_encode, player)){
         int encodedSize = xdr_getpos(&xdr_encode);
-	printf("encoded size %d", encodedSize);
-        sendMessage(encodedSize);
+	//printf("encoded size %d", encodedSize);
+        sent[0] = 'p';
+        sendMessage(encodedSize+1);
     }
     else{
         printf("Erreur d'envoi de la trame joueur! \n");
@@ -170,11 +181,12 @@ void encodeCharacter(Character* character){
     memset(sent, '\0',MAX_MSG_SIZE);
 
     xdr_setpos(&xdr_encode, 0);
-    printf(" character : %p\n",character); 
+    //printf(" character : %p\n",character);
     if(xdr_character(&xdr_encode, character)){
         int encodedSize = xdr_getpos(&xdr_encode);
 	//printf("encoded size %d", encodedSize);
-        sendMessage(encodedSize);
+        sent[0] = 'c';
+        sendMessage(encodedSize+1);
     }
     else{
         printf("Erreur d'envoi de la trame personnage! \n");
@@ -187,7 +199,8 @@ void encodeObject(Object* object){
 
     if(xdr_object(&xdr_encode, object)){
         int encodedSize = xdr_getpos(&xdr_encode);
-        sendMessage(encodedSize);
+	sent[0] = 'o';
+        sendMessage(encodedSize+1);
     }
     else{
         printf("Erreur d'envoi de la trame objet-jeu! \n");
@@ -198,8 +211,8 @@ void encodeObject(Object* object){
 
 void initXdr(){
 	/*creation des flots */
-	xdrmem_create(&xdr_encode,sent, MAX_MSG_SIZE, XDR_ENCODE);
-	xdrmem_create(&xdr_decode,received, MAX_MSG_SIZE, XDR_DECODE);
+	xdrmem_create(&xdr_encode,sent+1, MAX_MSG_SIZE - 1, XDR_ENCODE);
+	xdrmem_create(&xdr_decode,received+1, MAX_MSG_SIZE - 1, XDR_DECODE);
 
 }
 

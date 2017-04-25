@@ -22,7 +22,7 @@ void displayMap(Map map);
 void initMap(const char* filePath, Map* map);
 Tile* tileAt(Map* map, int x, int y);
 void moveCharacterTo(Character *character, Map* map,int x, int y);
-void moveCharacter(Character *character, Map* map, Direction direction);
+int moveCharacter(Character *character, Map* map, Direction direction);
 void placeCharacter(Character* character, Map* map);
 
 #endif
